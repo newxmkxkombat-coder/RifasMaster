@@ -360,46 +360,27 @@ const App: React.FC = () => {
         </header>
       )}
 
-      {/* Financial Summary - Only visible outside full screen */}
+      {/* Financial Summary - Redesigned to be ultra-compact and minimal */}
       {!isFullScreen && (
-        <section className="max-w-5xl mx-auto px-4 mt-8 animate-fade-in">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Recaudado Card */}
-            <div className="bg-slate-900 border border-emerald-500/20 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <CheckCircle size={60} className="text-emerald-500" />
-              </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mb-1">Recaudado</p>
-              <h2 className="text-3xl font-black text-white italic tracking-tight">
-                ${financialStats.paid.toLocaleString()}
-              </h2>
-              <div className="mt-2 h-1 w-12 bg-emerald-500 rounded-full"></div>
+        <section className="max-w-5xl mx-auto px-4 mt-4 animate-fade-in">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Recaudado Badge */}
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+              <span className="text-[10px] font-black uppercase text-emerald-500 tracking-wider">Recaudado:</span>
+              <span className="text-[10px] font-black text-white italic">${financialStats.paid.toLocaleString()}</span>
             </div>
 
-            {/* Pendiente Card */}
-            <div className="bg-slate-900 border border-amber-500/20 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <AlertCircle size={60} className="text-amber-500" />
-              </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500 mb-1">Por Cobrar</p>
-              <h2 className="text-3xl font-black text-white italic tracking-tight">
-                ${financialStats.pending.toLocaleString()}
-              </h2>
-              <div className="mt-2 h-1 w-12 bg-amber-500 rounded-full"></div>
+            {/* Pendiente Badge */}
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full">
+              <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider">Por Cobrar:</span>
+              <span className="text-[10px] font-black text-white italic">${financialStats.pending.toLocaleString()}</span>
             </div>
 
-            {/* Total Sales Card */}
-            <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <DollarSign size={60} className="text-slate-600" />
-              </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Venta Total</p>
-              <h2 className="text-3xl font-black text-white italic tracking-tight">
-                ${financialStats.total.toLocaleString()}
-              </h2>
-              <p className="text-[10px] font-bold text-slate-600 uppercase mt-1">
-                {financialStats.count} de {TOTAL_NUMBERS} boletas
-              </p>
+            {/* Total Sales Badge */}
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-800 border border-slate-700 rounded-full">
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Venta Total:</span>
+              <span className="text-[10px] font-black text-white italic">${financialStats.total.toLocaleString()}</span>
+              <span className="text-[9px] font-bold text-slate-600">({financialStats.count}/{TOTAL_NUMBERS})</span>
             </div>
           </div>
         </section>
