@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Ticket } from '../types';
 import { TICKET_PRICE } from '../constants';
-import { ShoppingCart, X, Check } from 'lucide-react';
+import { ShoppingCart, X, Check, User } from 'lucide-react';
 
 interface SalesControlProps {
   selectedTickets: Ticket[];
@@ -9,6 +9,7 @@ interface SalesControlProps {
   onClearSelection: () => void;
   initialBuyerName?: string;
   hideInEditMode?: boolean;
+  existingNames?: string[];
 }
 
 const SalesControl: React.FC<SalesControlProps> = ({ 
@@ -16,14 +17,45 @@ const SalesControl: React.FC<SalesControlProps> = ({
   onConfirmSale, 
   onClearSelection,
   initialBuyerName = '',
-  hideInEditMode = false
+  hideInEditMode = false,
+  existingNames = []
 }) => {
   const [buyerName, setBuyerName] = useState(initialBuyerName);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // Update internal name if initial name changes (e.g. from "Add more" mode)
   useEffect(() => {
     setBuyerName(initialBuyerName);
   }, [initialBuyerName]);
+
+  // Autocomplete logic
+  useEffect(() => {
+    if (buyerName.trim().length > 0 && !initialBuyerName) {
+      const filtered = existingNames
+        .filter(name => 
+          name.toLowerCase().includes(buyerName.toLowerCase()) && 
+          name.toLowerCase() !== buyerName.toLowerCase()
+        )
+        .slice(0, 5);
+      setSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setShowSuggestions(false);
+    }
+  }, [buyerName, existingNames, initialBuyerName]);
+
+  // Close suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (selectedTickets.length === 0 || hideInEditMode) return null;
 
@@ -33,6 +65,12 @@ const SalesControl: React.FC<SalesControlProps> = ({
     if (!buyerName.trim()) return;
     onConfirmSale(buyerName, payNow);
     setBuyerName('');
+    setShowSuggestions(false);
+  };
+
+  const handleSelectSuggestion = (name: string) => {
+    setBuyerName(name);
+    setShowSuggestions(false);
   };
 
   return (
@@ -49,14 +87,36 @@ const SalesControl: React.FC<SalesControlProps> = ({
           </div>
         </div>
 
-        <div className="flex-1 w-full md:w-auto flex flex-col md:flex-row gap-3 px-4 md:px-0 pb-4 md:pb-0">
-          <input
-            type="text"
-            placeholder="Nombre del Cliente..."
-            value={buyerName}
-            onChange={(e) => setBuyerName(e.target.value)}
-            className="flex-1 bg-slate-950 border border-slate-800 rounded-2xl px-5 py-4 text-base focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all text-slate-100 placeholder-slate-600 font-bold italic"
-          />
+        <div className="flex-1 w-full md:w-auto flex flex-col md:flex-row gap-3 px-4 md:px-0 pb-4 md:pb-0 relative" ref={containerRef}>
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Nombre del Cliente..."
+              value={buyerName}
+              onChange={(e) => setBuyerName(e.target.value)}
+              onFocus={() => buyerName.trim().length > 0 && suggestions.length > 0 && setShowSuggestions(true)}
+              className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-4 text-base focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition-all text-slate-100 placeholder-slate-600 font-bold italic"
+            />
+            
+            {/* Suggestions Dropdown */}
+            {showSuggestions && (
+              <div className="absolute bottom-full left-0 w-full mb-3 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden animate-fade-in z-[60]">
+                <div className="p-2">
+                  <p className="px-3 py-1.5 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-800 mb-1">Sugerencias</p>
+                  {suggestions.map((name, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleSelectSuggestion(name)}
+                      className="w-full text-left px-4 py-3 text-sm font-bold text-slate-200 hover:bg-emerald-500 hover:text-slate-950 rounded-xl transition-colors flex items-center gap-3"
+                    >
+                      <User size={14} className="opacity-50" />
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           
           <div className="flex gap-3">
             <button
