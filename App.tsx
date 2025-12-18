@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import TicketGrid from './components/TicketGrid';
 import UserSummaryList from './components/UserSummaryList';
@@ -211,12 +212,15 @@ const App: React.FC = () => {
   };
 
   const handlePrepareExportText = () => {
-    const userMap = new Map<string, string[]>();
+    const userMap = new Map<string, { numbers: string[], paid: boolean }[]>();
     tickets.forEach(ticket => {
       if (ticket.ownerName && (ticket.status === TicketStatus.RESERVED || ticket.status === TicketStatus.PAID)) {
-        const nums = userMap.get(ticket.ownerName) || [];
-        nums.push(ticket.id);
-        userMap.set(ticket.ownerName, nums);
+        const userEntry = userMap.get(ticket.ownerName) || [];
+        userEntry.push({
+          numbers: [ticket.id],
+          paid: ticket.status === TicketStatus.PAID
+        });
+        userMap.set(ticket.ownerName, userEntry);
       }
     });
 
@@ -225,13 +229,33 @@ const App: React.FC = () => {
       return;
     }
 
-    let textContent = "";
+    let textContent = "🎟️ *ESTADO ACTUAL DE LA RIFA* 🎟️\n";
+    textContent += "━━━━━━━━━━━━━━━━━━━━━━\n\n";
+
     const sortedNames = Array.from(userMap.keys()).sort((a, b) => a.localeCompare(b));
 
     sortedNames.forEach((name, index) => {
-      const nums = userMap.get(name)!.sort((a, b) => a.localeCompare(b));
-      textContent += `${name}: ${nums.join(' - ')}${index === sortedNames.length - 1 ? '' : '\n'}`;
+      const ticketsForUser = userMap.get(name)!;
+      const allNumbers = ticketsForUser.flatMap(t => t.numbers).sort((a, b) => a.localeCompare(b));
+      const allPaid = ticketsForUser.every(t => t.paid);
+      const somePaid = ticketsForUser.some(t => t.paid);
+      
+      let statusText = allPaid ? "✅ PAGADO" : (somePaid ? "⚠️ PARCIAL" : "⏳ PENDIENTE");
+
+      textContent += `👤 *${name.toUpperCase()}*\n`;
+      textContent += `🔢 Números: ${allNumbers.join(' - ')}\n`;
+      textContent += `💰 Estado: ${statusText}\n`;
+      
+      if (index < sortedNames.length - 1) {
+        textContent += "----------------------\n\n";
+      }
     });
+
+    textContent += "\n━━━━━━━━━━━━━━━━━━━━━━\n";
+    textContent += `📊 *RESUMEN:*\n`;
+    textContent += `✅ Vendidos: ${tickets.filter(t => t.status !== TicketStatus.AVAILABLE).length}/${TOTAL_NUMBERS}\n`;
+    textContent += `💵 Recaudado: $${(tickets.filter(t => t.status === TicketStatus.PAID).length * TICKET_PRICE).toLocaleString()}\n`;
+    textContent += "━━━━━━━━━━━━━━━━━━━━━━";
 
     setExportModal({ isOpen: true, content: textContent });
     setShowDbMenu(false);
