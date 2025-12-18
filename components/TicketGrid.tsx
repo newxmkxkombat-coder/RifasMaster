@@ -1,5 +1,5 @@
 
-import React, { forwardRef } from 'react';
+import React from 'react';
 import { Ticket, TicketStatus } from '../types';
 import { STATUS_COLORS } from '../constants';
 import { RefreshCw, X } from 'lucide-react';
@@ -12,20 +12,19 @@ interface TicketGridProps {
   activeOwnerName?: string | null;
 }
 
-const TicketGrid = forwardRef<HTMLDivElement, TicketGridProps>(({ 
+const TicketGrid: React.FC<TicketGridProps> = ({ 
   tickets, 
   onToggleTicket, 
   swappingTicketId, 
   isFullScreen = false, 
   activeOwnerName = null 
-}, ref) => {
+}) => {
   return (
     <div 
-      ref={ref}
       className={`
         grid transition-all duration-500 w-full mx-auto
         ${isFullScreen 
-          ? 'grid-cols-5 sm:grid-cols-10 gap-2 sm:gap-4 p-6 sm:p-10 bg-slate-950 flex-1 content-center' 
+          ? 'grid-cols-10 gap-3 sm:gap-4 p-5 bg-slate-950 max-w-5xl'
           : 'grid-cols-5 sm:grid-cols-10 gap-3 sm:gap-4 p-5 bg-slate-900 border border-slate-800 shadow-2xl rounded-2xl'
         }
       `}
@@ -58,7 +57,7 @@ const TicketGrid = forwardRef<HTMLDivElement, TicketGridProps>(({
               ${isSwappingSource ? 'bg-indigo-900 border-indigo-400 text-white ring-2 ring-indigo-500/50 z-10' : STATUS_COLORS[ticket.status]}
               ${belongsToActiveUser ? 'bg-emerald-950 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)]' : ''}
               ${!isInteractive && !isSwappingSource ? 'cursor-not-allowed opacity-100' : 'active:scale-90 cursor-pointer'}
-              aspect-square ${isFullScreen ? 'text-xl sm:text-3xl' : 'text-lg sm:text-2xl'} border-2
+              aspect-square ${isFullScreen ? 'text-xl sm:text-4xl' : 'text-lg sm:text-2xl'} border-2
             `}
           >
             <span className={`relative z-10 text-white drop-shadow-lg ${isOccupied && !isSwappingSource ? 'opacity-40' : 'opacity-100'}`}>
@@ -82,8 +81,6 @@ const TicketGrid = forwardRef<HTMLDivElement, TicketGridProps>(({
       })}
     </div>
   );
-});
-
-TicketGrid.displayName = 'TicketGrid';
+};
 
 export default TicketGrid;
