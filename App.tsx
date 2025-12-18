@@ -4,7 +4,24 @@ import UserSummaryList from './components/UserSummaryList';
 import SalesControl from './components/SalesControl';
 import { Ticket, TicketStatus } from './types';
 import { TOTAL_NUMBERS, TICKET_PRICE } from './constants';
-import { LayoutGrid, Users, Trophy, RefreshCw, Database, Download, Upload, Trash, CheckCircle, Maximize2, Minimize2, Check, UserPlus } from 'lucide-react';
+import { 
+  LayoutGrid, 
+  Users, 
+  Trophy, 
+  RefreshCw, 
+  Database, 
+  Download, 
+  Upload, 
+  Trash, 
+  CheckCircle, 
+  Maximize2, 
+  Minimize2, 
+  Check, 
+  UserPlus,
+  FileText,
+  Copy,
+  X as CloseIcon
+} from 'lucide-react';
 
 const App: React.FC = () => {
   const [tickets, setTickets] = useState<Ticket[]>(() => {
@@ -29,6 +46,14 @@ const App: React.FC = () => {
   const [showDbMenu, setShowDbMenu] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [fullScreenName, setFullScreenName] = useState('');
+  
+  // Export Modal State
+  const [exportModal, setExportModal] = useState<{ isOpen: boolean; content: string }>({
+    isOpen: false,
+    content: ''
+  });
+  const [copied, setCopied] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -39,6 +64,7 @@ const App: React.FC = () => {
   }, [tickets]);
 
   const handleToggleTicket = (id: string) => {
+    // Logic for swapping a ticket
     if (swappingTicketId) {
        const targetTicket = tickets.find(t => t.id === id);
        if (targetTicket && targetTicket.status === TicketStatus.AVAILABLE) {
@@ -55,6 +81,24 @@ const App: React.FC = () => {
        return;
     }
 
+    // Direct assignment mode for "Add More"
+    if (addingTicketsToUser) {
+        setTickets(prev => prev.map(t => {
+            if (t.id !== id) return t;
+            // If available, assign it to the active user immediately
+            if (t.status === TicketStatus.AVAILABLE) {
+                return { ...t, status: TicketStatus.RESERVED, ownerName: addingTicketsToUser };
+            }
+            // If it belongs to the active user, toggle it back to available
+            if (t.ownerName === addingTicketsToUser) {
+                return { ...t, status: TicketStatus.AVAILABLE, ownerName: undefined };
+            }
+            return t;
+        }));
+        return;
+    }
+
+    // Normal selection logic
     setTickets(prev => prev.map(t => {
       if (t.id !== id) return t;
       if (t.status === TicketStatus.AVAILABLE) return { ...t, status: TicketStatus.SELECTED };
@@ -74,9 +118,7 @@ const App: React.FC = () => {
       }
       return t;
     }));
-    if (!isFullScreen) {
-      setActiveTab('users');
-    }
+    
     setAddingTicketsToUser(null);
     setFullScreenName('');
   };
@@ -141,6 +183,39 @@ const App: React.FC = () => {
     setShowDbMenu(false);
   };
 
+  const handlePrepareExportText = () => {
+    const userMap = new Map<string, string[]>();
+    tickets.forEach(ticket => {
+      if (ticket.ownerName && (ticket.status === TicketStatus.RESERVED || ticket.status === TicketStatus.PAID)) {
+        const nums = userMap.get(ticket.ownerName) || [];
+        nums.push(ticket.id);
+        userMap.set(ticket.ownerName, nums);
+      }
+    });
+
+    if (userMap.size === 0) {
+      alert("No hay ventas registradas para exportar.");
+      return;
+    }
+
+    let textContent = "";
+    const sortedNames = Array.from(userMap.keys()).sort((a, b) => a.localeCompare(b));
+
+    sortedNames.forEach((name, index) => {
+      const nums = userMap.get(name)!.sort((a, b) => a.localeCompare(b));
+      textContent += `${name}: ${nums.join(' - ')}${index === sortedNames.length - 1 ? '' : '\n'}`;
+    });
+
+    setExportModal({ isOpen: true, content: textContent });
+    setShowDbMenu(false);
+  };
+
+  const handleCopyContent = () => {
+    navigator.clipboard.writeText(exportModal.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const totalRaised = tickets.filter(t => t.status === TicketStatus.PAID).length * TICKET_PRICE;
   const totalPending = tickets.filter(t => t.status === TicketStatus.RESERVED).length * TICKET_PRICE;
   const selectedCount = tickets.filter(t => t.status === TicketStatus.SELECTED).length;
@@ -189,10 +264,14 @@ const App: React.FC = () => {
                       <Database size={20} />
                     </button>
                     {showDbMenu && (
-                      <div className="absolute top-full right-0 mt-3 w-52 bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 z-50 overflow-hidden ring-1 ring-white/10">
+                      <div className="absolute top-full right-0 mt-3 w-64 bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 z-50 overflow-hidden ring-1 ring-white/10">
                         <div className="p-2 space-y-1">
+                           <button onClick={handlePrepareExportText} className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-emerald-400 hover:bg-emerald-950/30 rounded-xl font-bold transition-colors">
+                              <FileText size={16} /> <span>Exportar Lista (Texto)</span>
+                           </button>
+                           <div className="h-px bg-slate-800 my-1 mx-2"></div>
                            <button onClick={handleDownloadBackup} className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 rounded-xl transition-colors">
-                              <Download size={16} /> <span>Respaldar Datos</span>
+                              <Download size={16} /> <span>Respaldar Datos (JSON)</span>
                            </button>
                            <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 rounded-xl transition-colors">
                               <Upload size={16} /> <span>Cargar Datos</span>
@@ -225,7 +304,51 @@ const App: React.FC = () => {
         </header>
       )}
 
-      {/* Title for Full Screen */}
+      {/* Export Modal */}
+      {exportModal.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl animate-fade-in">
+          <div className="bg-slate-900 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.8)] border border-slate-800 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-8 border-b border-slate-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-2xl font-black uppercase italic tracking-tight text-white">Lista de Participantes</h3>
+                <p className="text-xs text-slate-500 font-bold mt-1 uppercase tracking-widest">Listo para compartir</p>
+              </div>
+              <button 
+                onClick={() => setExportModal({ isOpen: false, content: '' })}
+                className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-full transition-all"
+              >
+                <CloseIcon size={20} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-8">
+              <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 font-mono text-emerald-400 text-sm leading-relaxed whitespace-pre-wrap select-all min-h-[200px]">
+                {exportModal.content}
+              </div>
+            </div>
+
+            <div className="p-8 bg-slate-950/50 border-t border-slate-800 flex flex-col sm:flex-row gap-4">
+              <button 
+                onClick={handleCopyContent}
+                className={`
+                  flex-1 py-5 rounded-[1.5rem] font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 transition-all
+                  ${copied ? 'bg-emerald-500 text-slate-950' : 'bg-slate-100 text-slate-950 hover:bg-white'}
+                `}
+              >
+                {copied ? <Check size={20} strokeWidth={3} /> : <Copy size={20} />}
+                {copied ? '¡Copiado!' : 'Copiar Todo'}
+              </button>
+              <button 
+                onClick={() => setExportModal({ isOpen: false, content: '' })}
+                className="flex-1 py-5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-[1.5rem] font-black uppercase tracking-widest text-sm"
+              >
+                Cerrar Ventana
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isFullScreen && (
         <div className="fixed top-0 left-0 right-0 p-5 bg-slate-950/90 backdrop-blur-md z-50 border-b border-slate-900 flex flex-col items-center">
             <h2 className="text-xl font-black italic uppercase tracking-[0.3em] text-emerald-400">ESTADO DE LA RIFA</h2>
@@ -261,15 +384,31 @@ const App: React.FC = () => {
                  </div>
               )}
               {addingTicketsToUser && !isFullScreen && (
-                 <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-4 mb-8 flex justify-between items-center ring-1 ring-emerald-500/20 animate-pulse">
+                 <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-4 mb-8 flex justify-between items-center ring-1 ring-emerald-500/20">
                     <div className="flex items-center gap-3">
-                      <UserPlus className="text-emerald-400" size={20} />
-                      <p className="text-sm font-semibold text-emerald-300 italic">Seleccionando nuevas boletas para: <b className="text-white uppercase">{addingTicketsToUser}</b></p>
+                      <div className="p-2 bg-emerald-500 text-slate-950 rounded-lg animate-pulse">
+                        <UserPlus size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-emerald-400 tracking-widest leading-none mb-1">Editando asignación</p>
+                        <p className="text-sm font-bold text-white italic uppercase">Asignando boletas a: {addingTicketsToUser}</p>
+                      </div>
                     </div>
-                    <button onClick={handleCancelAddMore} className="text-[10px] font-black bg-slate-800 text-slate-300 hover:text-white px-4 py-2 rounded-xl uppercase">Cancelar</button>
+                    <button 
+                      onClick={handleCancelAddMore} 
+                      className="text-[10px] font-black bg-emerald-500 text-slate-950 hover:bg-emerald-400 px-6 py-2.5 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                    >
+                      Terminar Edición
+                    </button>
                  </div>
               )}
-              <TicketGrid tickets={tickets} onToggleTicket={handleToggleTicket} swappingTicketId={swappingTicketId} isFullScreen={isFullScreen} />
+              <TicketGrid 
+                tickets={tickets} 
+                onToggleTicket={handleToggleTicket} 
+                swappingTicketId={swappingTicketId} 
+                isFullScreen={isFullScreen} 
+                activeOwnerName={addingTicketsToUser}
+              />
             </div>
           ) : (
             <UserSummaryList 
@@ -336,6 +475,7 @@ const App: React.FC = () => {
           onConfirmSale={handleConfirmSale}
           onClearSelection={handleClearSelection}
           initialBuyerName={addingTicketsToUser || ''}
+          hideInEditMode={!!addingTicketsToUser}
         />
       )}
 
