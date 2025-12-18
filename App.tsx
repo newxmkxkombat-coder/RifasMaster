@@ -273,10 +273,8 @@ const App: React.FC = () => {
   };
 
   const totalRaised = tickets.filter(t => t.status === TicketStatus.PAID).length * TICKET_PRICE;
-  const totalPending = tickets.filter(t => t.status === TicketStatus.RESERVED).length * TICKET_PRICE;
   const availableCount = tickets.filter(t => t.status === TicketStatus.AVAILABLE).length;
   const selectedCount = tickets.filter(t => t.status === TicketStatus.SELECTED).length;
-  const percentSold = ((tickets.filter(t => t.status === TicketStatus.PAID || t.status === TicketStatus.RESERVED).length) / TOTAL_NUMBERS) * 100;
 
   return (
     <div className={`min-h-screen bg-slate-950 text-slate-50 select-none ${isFullScreen ? 'h-screen overflow-hidden' : 'pb-40'}`}>
@@ -343,24 +341,6 @@ const App: React.FC = () => {
                   </div>
                </div>
             </div>
-            
-            <div className="flex items-center space-x-6 text-sm w-full sm:w-auto overflow-x-auto scrollbar-hide">
-               <div className="min-w-fit">
-                 <p className="text-slate-500 text-[10px] uppercase font-black mb-1">Caja</p>
-                 <p className="text-xl font-black text-emerald-400 leading-none">${totalRaised.toLocaleString()}</p>
-               </div>
-               <div className="min-w-fit">
-                 <p className="text-slate-500 text-[10px] uppercase font-black mb-1">Cuentas</p>
-                 <p className="text-xl font-black text-amber-500 leading-none">${totalPending.toLocaleString()}</p>
-               </div>
-               <div className="min-w-fit border-l border-slate-800 pl-6">
-                 <p className="text-slate-500 text-[10px] uppercase font-black mb-1">Disponibles</p>
-                 <p className="text-xl font-black text-slate-100 leading-none">{availableCount}</p>
-               </div>
-               <div className="flex-1 sm:w-28 bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700">
-                 <div className="bg-emerald-500 h-full rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]" style={{ width: `${percentSold}%`}}></div>
-               </div>
-            </div>
           </div>
         </header>
       )}
@@ -411,18 +391,15 @@ const App: React.FC = () => {
       )}
 
       {isFullScreen && (
-        <div className="fixed top-0 left-0 right-0 p-5 bg-slate-950/90 backdrop-blur-md z-50 border-b border-slate-900 flex flex-col items-center">
-            <h2 className="text-xl font-black italic uppercase tracking-[0.3em] text-emerald-400">ESTADO DE LA RIFA</h2>
-            <div className="flex gap-4 mt-2">
-                <span className="text-[9px] font-black uppercase text-slate-500 tracking-tighter">Ventas: {percentSold.toFixed(0)}%</span>
-                <span className="text-[9px] font-black uppercase text-slate-500 tracking-tighter">Recaudado: ${totalRaised.toLocaleString()}</span>
-                <span className="text-[9px] font-black uppercase text-emerald-400 tracking-tighter">Disponibles: {availableCount}</span>
-                {selectedCount > 0 && <span className="text-[9px] font-black uppercase text-red-400 tracking-tighter">Seleccionados: {selectedCount}</span>}
+        <div className="fixed top-0 left-0 right-0 p-2 z-50 flex justify-center pointer-events-none">
+            <div className="bg-slate-900/40 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-800/50 flex gap-4">
+                <span className="text-[8px] font-black uppercase text-emerald-400 tracking-[0.2em]">Disponibles: {availableCount}</span>
+                {selectedCount > 0 && <span className="text-[8px] font-black uppercase text-red-400 tracking-[0.2em]">Seleccionados: {selectedCount}</span>}
             </div>
         </div>
       )}
 
-      <main className={`${isFullScreen ? 'h-full flex flex-col pt-24 pb-28' : 'max-w-5xl mx-auto px-4 py-8'}`}>
+      <main className={`${isFullScreen ? 'h-full flex flex-col pt-8 pb-28' : 'max-w-5xl mx-auto px-4 py-8'}`}>
         {!isFullScreen && (
           <div className="flex space-x-8 border-b border-slate-800 mb-8">
             <button onClick={() => { setActiveTab('grid'); handleClearSelection(); }} className={`pb-4 px-2 text-sm font-black uppercase tracking-widest relative transition-all ${activeTab === 'grid' ? 'text-emerald-400' : 'text-slate-500'}`}>
@@ -438,7 +415,7 @@ const App: React.FC = () => {
 
         <div className={`animate-fade-in flex-1 ${isFullScreen ? 'flex items-center justify-center' : ''}`}>
           {activeTab === 'grid' ? (
-            <div className={isFullScreen ? 'w-full max-w-6xl px-4 flex items-center justify-center' : ''}>
+            <div className={isFullScreen ? 'w-full max-w-[98vh] px-2 flex items-center justify-center' : ''}>
               {swappingTicketId && !isFullScreen && (
                  <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 mb-8 flex justify-between items-center ring-1 ring-indigo-500/20">
                     <p className="text-sm font-semibold text-indigo-300 italic">Moviendo #{swappingTicketId}. Elije un nuevo destino disponible.</p>
@@ -547,7 +524,7 @@ const App: React.FC = () => {
                 className="bg-slate-800 hover:bg-slate-700 text-slate-400 px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-3 active:scale-95 transition-all shadow-lg border border-slate-700 sm:ml-auto"
               >
                 <Minimize2 size={16} />
-                SALIR DE VISTA GENERAL
+                SALIR
               </button>
            </div>
         </div>
