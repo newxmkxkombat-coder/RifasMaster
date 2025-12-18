@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import TicketGrid from './components/TicketGrid';
 import UserSummaryList from './components/UserSummaryList';
 import SalesControl from './components/SalesControl';
@@ -20,7 +20,8 @@ import {
   UserPlus,
   FileText,
   Copy,
-  X as CloseIcon
+  X as CloseIcon,
+  User as UserIcon
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -47,6 +48,11 @@ const App: React.FC = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [fullScreenName, setFullScreenName] = useState('');
   
+  // Autocomplete state for full screen
+  const [fsSuggestions, setFsSuggestions] = useState<string[]>([]);
+  const [showFsSuggestions, setShowFsSuggestions] = useState(false);
+  const fsInputContainerRef = useRef<HTMLDivElement>(null);
+
   // Export Modal State
   const [exportModal, setExportModal] = useState<{ isOpen: boolean; content: string }>({
     isOpen: false,
@@ -56,6 +62,15 @@ const App: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Compute unique names for autocomplete
+  const existingNames = useMemo(() => {
+    const names = new Set<string>();
+    tickets.forEach(t => {
+      if (t.ownerName) names.add(t.ownerName);
+    });
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  }, [tickets]);
+
   useEffect(() => {
     setIsSaving(true);
     localStorage.setItem('raffleTickets_v2', JSON.stringify(tickets));
@@ -63,8 +78,32 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, [tickets]);
 
+  // Handle outside clicks for full screen autocomplete
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (fsInputContainerRef.current && !fsInputContainerRef.current.contains(event.target as Node)) {
+        setShowFsSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Sync autocomplete for full screen
+  useEffect(() => {
+    const currentName = fullScreenName || addingTicketsToUser || '';
+    if (currentName.trim().length > 0 && !addingTicketsToUser) {
+      const filtered = existingNames
+        .filter(name => name.toLowerCase().includes(currentName.toLowerCase()) && name.toLowerCase() !== currentName.toLowerCase())
+        .slice(0, 5);
+      setFsSuggestions(filtered);
+      setShowFsSuggestions(filtered.length > 0);
+    } else {
+      setShowFsSuggestions(false);
+    }
+  }, [fullScreenName, addingTicketsToUser, existingNames]);
+
   const handleToggleTicket = (id: string) => {
-    // Logic for swapping a ticket
     if (swappingTicketId) {
        const targetTicket = tickets.find(t => t.id === id);
        if (targetTicket && targetTicket.status === TicketStatus.AVAILABLE) {
@@ -81,15 +120,12 @@ const App: React.FC = () => {
        return;
     }
 
-    // Direct assignment mode for "Add More"
     if (addingTicketsToUser) {
         setTickets(prev => prev.map(t => {
             if (t.id !== id) return t;
-            // If available, assign it to the active user immediately
             if (t.status === TicketStatus.AVAILABLE) {
                 return { ...t, status: TicketStatus.RESERVED, ownerName: addingTicketsToUser };
             }
-            // If it belongs to the active user, toggle it back to available
             if (t.ownerName === addingTicketsToUser) {
                 return { ...t, status: TicketStatus.AVAILABLE, ownerName: undefined };
             }
@@ -98,7 +134,6 @@ const App: React.FC = () => {
         return;
     }
 
-    // Normal selection logic
     setTickets(prev => prev.map(t => {
       if (t.id !== id) return t;
       if (t.status === TicketStatus.AVAILABLE) return { ...t, status: TicketStatus.SELECTED };
@@ -121,6 +156,7 @@ const App: React.FC = () => {
     
     setAddingTicketsToUser(null);
     setFullScreenName('');
+    setShowFsSuggestions(false);
   };
 
   const handleClearSelection = () => {
@@ -160,15 +196,6 @@ const App: React.FC = () => {
   const handleStartAddingToUser = (userName: string) => {
     setAddingTicketsToUser(userName);
     setActiveTab('grid');
-    handleClearSelection();
-  };
-
-  const handleCancelSwap = () => {
-    setSwappingTicketId(null);
-  };
-
-  const handleCancelAddMore = () => {
-    setAddingTicketsToUser(null);
     handleClearSelection();
   };
 
@@ -369,11 +396,11 @@ const App: React.FC = () => {
       <main className={`${isFullScreen ? 'h-full flex flex-col pt-24 pb-28' : 'max-w-5xl mx-auto px-4 py-8'}`}>
         {!isFullScreen && (
           <div className="flex space-x-8 border-b border-slate-800 mb-8">
-            <button onClick={() => { setActiveTab('grid'); handleCancelSwap(); handleCancelAddMore(); }} className={`pb-4 px-2 text-sm font-black uppercase tracking-widest relative transition-all ${activeTab === 'grid' ? 'text-emerald-400' : 'text-slate-500'}`}>
+            <button onClick={() => { setActiveTab('grid'); handleClearSelection(); }} className={`pb-4 px-2 text-sm font-black uppercase tracking-widest relative transition-all ${activeTab === 'grid' ? 'text-emerald-400' : 'text-slate-500'}`}>
               <div className="flex items-center gap-2.5"><LayoutGrid size={18} /><span>Tablero</span></div>
               {activeTab === 'grid' && <span className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500 rounded-t-full shadow-[0_0_10px_rgba(16,185,129,0.4)]"></span>}
             </button>
-            <button onClick={() => { setActiveTab('users'); handleCancelSwap(); handleCancelAddMore(); }} className={`pb-4 px-2 text-sm font-black uppercase tracking-widest relative transition-all ${activeTab === 'users' ? 'text-emerald-400' : 'text-slate-500'}`}>
+            <button onClick={() => { setActiveTab('users'); handleClearSelection(); }} className={`pb-4 px-2 text-sm font-black uppercase tracking-widest relative transition-all ${activeTab === 'users' ? 'text-emerald-400' : 'text-slate-500'}`}>
                <div className="flex items-center gap-2.5"><Users size={18} /><span>Participantes</span></div>
               {activeTab === 'users' && <span className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500 rounded-t-full shadow-[0_0_10px_rgba(16,185,129,0.4)]"></span>}
             </button>
@@ -386,7 +413,7 @@ const App: React.FC = () => {
               {swappingTicketId && !isFullScreen && (
                  <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 mb-8 flex justify-between items-center ring-1 ring-indigo-500/20">
                     <p className="text-sm font-semibold text-indigo-300 italic">Moviendo #{swappingTicketId}. Elije un nuevo destino disponible.</p>
-                    <button onClick={handleCancelSwap} className="text-[10px] font-black bg-indigo-500 text-white px-4 py-2 rounded-xl uppercase">Cancelar</button>
+                    <button onClick={() => setSwappingTicketId(null)} className="text-[10px] font-black bg-indigo-500 text-white px-4 py-2 rounded-xl uppercase">Cancelar</button>
                  </div>
               )}
               {addingTicketsToUser && !isFullScreen && (
@@ -401,7 +428,7 @@ const App: React.FC = () => {
                       </div>
                     </div>
                     <button 
-                      onClick={handleCancelAddMore} 
+                      onClick={() => setAddingTicketsToUser(null)} 
                       className="text-[10px] font-black bg-emerald-500 text-slate-950 hover:bg-emerald-400 px-6 py-2.5 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-all"
                     >
                       Terminar Edición
@@ -433,34 +460,56 @@ const App: React.FC = () => {
       {isFullScreen && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 z-50 flex justify-center items-center shadow-[0_-20px_40px_rgba(0,0,0,0.6)]">
            <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-5xl px-4">
-              <div className="flex-1 w-full sm:w-auto flex items-center gap-3">
-                 <input 
-                   type="text" 
-                   placeholder="Nombre del Participante..." 
-                   value={fullScreenName || (addingTicketsToUser || '')}
-                   onChange={(e) => {
-                      if (addingTicketsToUser) setAddingTicketsToUser(e.target.value);
-                      else setFullScreenName(e.target.value);
-                   }}
-                   className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-emerald-500/30 transition-all text-slate-100 placeholder-slate-600 font-bold italic"
-                 />
-                 {selectedCount > 0 && (
-                   <div className="flex gap-2">
-                     <button 
-                       onClick={() => handleConfirmSale(addingTicketsToUser || fullScreenName, false)}
-                       disabled={!(addingTicketsToUser || fullScreenName).trim()}
-                       className="bg-slate-800 text-amber-500 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest disabled:opacity-20 transition-all whitespace-nowrap"
-                     >
-                       Apartar
-                     </button>
-                     <button 
-                       onClick={() => handleConfirmSale(addingTicketsToUser || fullScreenName, true)}
-                       disabled={!(addingTicketsToUser || fullScreenName).trim()}
-                       className="bg-emerald-500 text-slate-950 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest disabled:opacity-20 transition-all flex items-center gap-2 whitespace-nowrap"
-                     >
-                       <Check size={14} strokeWidth={4} /> Pagado
-                     </button>
-                   </div>
+              <div className="flex-1 w-full sm:w-auto relative" ref={fsInputContainerRef}>
+                 <div className="flex items-center gap-3">
+                    <input 
+                      type="text" 
+                      placeholder="Nombre del Participante..." 
+                      value={fullScreenName || (addingTicketsToUser || '')}
+                      onChange={(e) => {
+                          if (addingTicketsToUser) setAddingTicketsToUser(e.target.value);
+                          else setFullScreenName(e.target.value);
+                      }}
+                      onFocus={() => (fullScreenName.trim().length > 0 || addingTicketsToUser) && fsSuggestions.length > 0 && setShowFsSuggestions(true)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-emerald-500/30 transition-all text-slate-100 placeholder-slate-600 font-bold italic"
+                    />
+                    {selectedCount > 0 && (
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleConfirmSale(addingTicketsToUser || fullScreenName, false)}
+                          disabled={!(addingTicketsToUser || fullScreenName).trim()}
+                          className="bg-slate-800 text-amber-500 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest disabled:opacity-20 transition-all whitespace-nowrap"
+                        >
+                          Apartar
+                        </button>
+                        <button 
+                          onClick={() => handleConfirmSale(addingTicketsToUser || fullScreenName, true)}
+                          disabled={!(addingTicketsToUser || fullScreenName).trim()}
+                          className="bg-emerald-500 text-slate-950 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest disabled:opacity-20 transition-all flex items-center gap-2 whitespace-nowrap"
+                        >
+                          <Check size={14} strokeWidth={4} /> Pagado
+                        </button>
+                      </div>
+                    )}
+                 </div>
+
+                 {/* Suggestions Dropdown for Full Screen */}
+                 {showFsSuggestions && !addingTicketsToUser && (
+                    <div className="absolute bottom-full left-0 w-full mb-3 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[60]">
+                       <div className="p-2">
+                          <p className="px-3 py-1.5 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-800 mb-1">Sugerencias</p>
+                          {fsSuggestions.map((name, i) => (
+                            <button
+                              key={i}
+                              onClick={() => { setFullScreenName(name); setShowFsSuggestions(false); }}
+                              className="w-full text-left px-4 py-3 text-sm font-bold text-slate-200 hover:bg-emerald-500 hover:text-slate-950 rounded-xl transition-colors flex items-center gap-3"
+                            >
+                              <UserIcon size={14} className="opacity-50" />
+                              {name}
+                            </button>
+                          ))}
+                       </div>
+                    </div>
                  )}
               </div>
 
@@ -482,6 +531,7 @@ const App: React.FC = () => {
           onClearSelection={handleClearSelection}
           initialBuyerName={addingTicketsToUser || ''}
           hideInEditMode={!!addingTicketsToUser}
+          existingNames={existingNames}
         />
       )}
 
