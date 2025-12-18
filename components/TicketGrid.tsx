@@ -17,7 +17,7 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
     <div className={`
       grid transition-all duration-500 w-full mx-auto
       ${isFullScreen 
-        ? 'grid-cols-10 gap-1.5 sm:gap-2 p-2 bg-slate-950 border border-slate-900 shadow-[0_0_50px_rgba(0,0,0,1)] max-w-[95vh]'
+        ? 'grid-cols-10 gap-1.5 sm:gap-2 p-1.5 bg-slate-950 border border-slate-900 shadow-[0_0_50px_rgba(0,0,0,1)] max-w-[98vh]'
         : 'grid-cols-5 sm:grid-cols-10 gap-3 sm:gap-4 p-5 bg-slate-900 border border-slate-800 shadow-2xl rounded-2xl'
       }
     `}>
@@ -52,7 +52,7 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
               ${isSwappingSource ? 'bg-indigo-900 border-indigo-400 text-white ring-2 ring-indigo-500/50 z-10' : STATUS_COLORS[ticket.status]}
               ${belongsToActiveUser ? 'bg-emerald-950 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)]' : ''}
               ${!isInteractive && !isSwappingSource ? 'cursor-not-allowed opacity-100' : 'active:scale-90 cursor-pointer'}
-              aspect-square ${isFullScreen ? 'text-xl sm:text-4xl' : 'text-lg sm:text-2xl'} border-2
+              aspect-square ${isFullScreen ? 'text-xl sm:text-5xl' : 'text-lg sm:text-2xl'} border-2
             `}
           >
             {/* The Number - Slightly faded when occupied to emphasize the X */}
