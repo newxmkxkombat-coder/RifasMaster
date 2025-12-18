@@ -267,6 +267,11 @@ const App: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleEnterFullScreen = () => {
+    setActiveTab('grid');
+    setIsFullScreen(true);
+  };
+
   const totalRaised = tickets.filter(t => t.status === TicketStatus.PAID).length * TICKET_PRICE;
   const totalPending = tickets.filter(t => t.status === TicketStatus.RESERVED).length * TICKET_PRICE;
   const availableCount = tickets.filter(t => t.status === TicketStatus.AVAILABLE).length;
@@ -302,7 +307,7 @@ const App: React.FC = () => {
                
                <div className="flex items-center gap-2 sm:ml-6">
                   <button 
-                    onClick={() => setIsFullScreen(true)}
+                    onClick={handleEnterFullScreen}
                     className="p-2.5 text-emerald-400 hover:bg-emerald-500/10 bg-slate-800 rounded-xl transition-all active:scale-95"
                     title="Modo Tablero Completo"
                   >
