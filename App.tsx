@@ -22,9 +22,7 @@ import {
   FileText,
   Copy,
   X as CloseIcon,
-  User as UserIcon,
-  DollarSign,
-  AlertCircle
+  User as UserIcon
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -297,7 +295,7 @@ const App: React.FC = () => {
                     <Trophy size={20} />
                   </div>
                   <div>
-                    <h1 className="text-xl font-black tracking-tight leading-none uppercase italic">RifaMaster</h1>
+                    <h1 className="text-xl font-black tracking-tight leading-none uppercase italic text-white">RifaMaster</h1>
                     <div className="flex items-center mt-1">
                       {isSaving ? (
                         <span className="flex items-center text-[10px] text-slate-500 font-medium">
@@ -354,6 +352,7 @@ const App: React.FC = () => {
         </header>
       )}
 
+      {/* Financial Stats Bar - Ultra Compact 10px */}
       {!isFullScreen && (
         <section className="max-w-5xl mx-auto px-4 mt-4 animate-fade-in">
           <div className="flex flex-wrap items-center gap-3">
@@ -374,6 +373,7 @@ const App: React.FC = () => {
         </section>
       )}
 
+      {/* Export Modal */}
       {exportModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl animate-fade-in">
           <div className="bg-slate-900 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.8)] border border-slate-800 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -427,7 +427,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <main className={`${isFullScreen ? 'h-full flex flex-col pt-8 pb-28' : 'max-w-5xl mx-auto px-4 py-8'}`}>
+      <main className={`${isFullScreen ? 'h-full flex flex-col pt-8 pb-32' : 'max-w-5xl mx-auto px-4 py-8'}`}>
         {!isFullScreen && (
           <div className="flex space-x-8 border-b border-slate-800 mb-8">
             <button onClick={() => { setActiveTab('grid'); handleClearSelection(); }} className={`pb-4 px-2 text-sm font-black uppercase tracking-widest relative transition-all ${activeTab === 'grid' ? 'text-emerald-400' : 'text-slate-500'}`}>
@@ -441,17 +441,17 @@ const App: React.FC = () => {
           </div>
         )}
 
-        <div className={`animate-fade-in flex-1 ${isFullScreen ? 'flex items-center justify-center' : ''}`}>
+        <div className={`animate-fade-in flex-1 ${isFullScreen ? 'flex items-center justify-center overflow-auto' : ''}`}>
           {activeTab === 'grid' ? (
-            <div className={isFullScreen ? 'w-full max-w-5xl px-4 flex items-center justify-center' : ''}>
+            <div className={isFullScreen ? 'w-full max-w-4xl px-4 flex flex-col items-center justify-center' : ''}>
               {swappingTicketId && !isFullScreen && (
-                 <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 mb-8 flex justify-between items-center ring-1 ring-indigo-500/20">
+                 <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 mb-8 flex justify-between items-center ring-1 ring-indigo-500/20 w-full">
                     <p className="text-sm font-semibold text-indigo-300 italic">Moviendo #{swappingTicketId}. Elije un nuevo destino disponible.</p>
                     <button onClick={() => setSwappingTicketId(null)} className="text-[10px] font-black bg-indigo-500 text-white px-4 py-2 rounded-xl uppercase">Cancelar</button>
                  </div>
               )}
               {addingTicketsToUser && !isFullScreen && (
-                 <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-4 mb-8 flex justify-between items-center ring-1 ring-emerald-500/20">
+                 <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-4 mb-8 flex justify-between items-center ring-1 ring-emerald-500/20 w-full">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-emerald-500 text-slate-950 rounded-lg animate-pulse">
                         <UserPlus size={18} />
@@ -465,7 +465,7 @@ const App: React.FC = () => {
                       onClick={() => setAddingTicketsToUser(null)} 
                       className="text-[10px] font-black bg-emerald-500 text-slate-950 hover:bg-emerald-400 px-6 py-2.5 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-all"
                     >
-                      Terminar Edición
+                      Terminar
                     </button>
                  </div>
               )}
@@ -490,9 +490,10 @@ const App: React.FC = () => {
         </div>
       </main>
 
+      {/* Control for Full Screen Mode */}
       {isFullScreen && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 z-50 flex justify-center items-center shadow-[0_-20px_40px_rgba(0,0,0,0.6)]">
-           <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-5xl px-4">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 z-50 flex justify-center items-center">
+           <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-4xl px-4">
               <div className="flex-1 w-full sm:w-auto relative" ref={fsInputContainerRef}>
                  <div className="flex items-center gap-3">
                     <input 
@@ -520,7 +521,7 @@ const App: React.FC = () => {
                           disabled={!(addingTicketsToUser || fullScreenName).trim()}
                           className="bg-emerald-500 text-slate-950 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest disabled:opacity-20 transition-all flex items-center gap-2 whitespace-nowrap"
                         >
-                          <Check size={14} strokeWidth={4} /> Pagado
+                          <Check size={14} strokeWidth={4} /> Confirmar
                         </button>
                       </div>
                     )}
@@ -547,7 +548,7 @@ const App: React.FC = () => {
 
               <button 
                 onClick={() => { setIsFullScreen(false); setAddingTicketsToUser(null); }}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-400 px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-3 active:scale-95 transition-all shadow-lg border border-slate-700 sm:ml-auto"
+                className="bg-slate-800 hover:bg-slate-700 text-slate-400 px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-3 active:scale-95 transition-all shadow-lg border border-slate-700"
               >
                 <Minimize2 size={16} />
                 SALIR
@@ -556,6 +557,7 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {/* Floating Sales Control (Normal Mode) */}
       {!swappingTicketId && !isFullScreen && (
         <SalesControl 
           selectedTickets={tickets.filter(t => t.status === TicketStatus.SELECTED)} 
@@ -567,6 +569,7 @@ const App: React.FC = () => {
         />
       )}
 
+      {/* Hidden File Input for Backup Loading */}
       <input type="file" ref={fileInputRef} onChange={(e) => {
         const file = e.target.files?.[0];
         if (!file) return;
