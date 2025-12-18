@@ -218,6 +218,7 @@ const App: React.FC = () => {
 
   const totalRaised = tickets.filter(t => t.status === TicketStatus.PAID).length * TICKET_PRICE;
   const totalPending = tickets.filter(t => t.status === TicketStatus.RESERVED).length * TICKET_PRICE;
+  const availableCount = tickets.filter(t => t.status === TicketStatus.AVAILABLE).length;
   const selectedCount = tickets.filter(t => t.status === TicketStatus.SELECTED).length;
   const percentSold = ((tickets.filter(t => t.status === TicketStatus.PAID || t.status === TicketStatus.RESERVED).length) / TOTAL_NUMBERS) * 100;
 
@@ -296,6 +297,10 @@ const App: React.FC = () => {
                  <p className="text-slate-500 text-[10px] uppercase font-black mb-1">Cuentas</p>
                  <p className="text-xl font-black text-amber-500 leading-none">${totalPending.toLocaleString()}</p>
                </div>
+               <div className="min-w-fit border-l border-slate-800 pl-6">
+                 <p className="text-slate-500 text-[10px] uppercase font-black mb-1">Disponibles</p>
+                 <p className="text-xl font-black text-slate-100 leading-none">{availableCount}</p>
+               </div>
                <div className="flex-1 sm:w-28 bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700">
                  <div className="bg-emerald-500 h-full rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]" style={{ width: `${percentSold}%`}}></div>
                </div>
@@ -355,6 +360,7 @@ const App: React.FC = () => {
             <div className="flex gap-4 mt-2">
                 <span className="text-[9px] font-black uppercase text-slate-500 tracking-tighter">Ventas: {percentSold.toFixed(0)}%</span>
                 <span className="text-[9px] font-black uppercase text-slate-500 tracking-tighter">Recaudado: ${totalRaised.toLocaleString()}</span>
+                <span className="text-[9px] font-black uppercase text-emerald-400 tracking-tighter">Disponibles: {availableCount}</span>
                 {selectedCount > 0 && <span className="text-[9px] font-black uppercase text-red-400 tracking-tighter">Seleccionados: {selectedCount}</span>}
             </div>
         </div>
