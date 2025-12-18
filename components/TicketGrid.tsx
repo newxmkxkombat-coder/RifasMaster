@@ -59,12 +59,12 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
               {ticket.id}
             </span>
             
-            {/* The "X" overlay - Large and centered */}
+            {/* The "X" overlay - Scaled down to 75% for a cleaner look */}
             {isOccupied && !isSwappingSource && (
                <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none overflow-hidden">
                   <X 
-                    className={`w-full h-full opacity-100 scale-125 ${belongsToActiveUser ? 'text-emerald-400' : 'text-red-600'}`} 
-                    strokeWidth={isFullScreen ? 6 : 5}
+                    className={`w-full h-full opacity-100 scale-75 ${belongsToActiveUser ? 'text-emerald-400' : 'text-red-600'}`} 
+                    strokeWidth={isFullScreen ? 4 : 3}
                   />
                </div>
             )}
