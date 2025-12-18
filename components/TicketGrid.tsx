@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Ticket, TicketStatus } from '../types';
 import { STATUS_COLORS } from '../constants';
@@ -60,12 +61,12 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
               {ticket.id}
             </span>
             
-            {/* The "X" overlay - Emerald for current user's tickets, Red for others */}
+            {/* The "X" overlay - Now larger and with thicker stroke to 'cover' the number */}
             {isOccupied && !isSwappingSource && (
-               <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+               <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none overflow-hidden">
                   <X 
-                    className={`w-full h-full opacity-90 p-1 sm:p-2 ${belongsToActiveUser ? 'text-emerald-400' : 'text-red-500'}`} 
-                    strokeWidth={isFullScreen ? 4 : 3}
+                    className={`w-full h-full opacity-90 scale-110 ${belongsToActiveUser ? 'text-emerald-400' : 'text-red-500'}`} 
+                    strokeWidth={isFullScreen ? 5 : 4}
                   />
                </div>
             )}
