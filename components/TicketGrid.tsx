@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { Ticket, TicketStatus } from '../types';
 import { STATUS_COLORS } from '../constants';
 import { RefreshCw, X } from 'lucide-react';
@@ -12,26 +12,33 @@ interface TicketGridProps {
   activeOwnerName?: string | null;
 }
 
-const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappingTicketId, isFullScreen = false, activeOwnerName = null }) => {
+const TicketGrid = forwardRef<HTMLDivElement, TicketGridProps>(({ 
+  tickets, 
+  onToggleTicket, 
+  swappingTicketId, 
+  isFullScreen = false, 
+  activeOwnerName = null 
+}, ref) => {
   return (
-    <div className={`
-      grid transition-all duration-500 w-full mx-auto
-      ${isFullScreen 
-        ? 'grid-cols-10 gap-3 sm:gap-4 p-5 bg-slate-950 max-w-5xl'
-        : 'grid-cols-5 sm:grid-cols-10 gap-3 sm:gap-4 p-5 bg-slate-900 border border-slate-800 shadow-2xl rounded-2xl'
-      }
-    `}>
+    <div 
+      ref={ref}
+      className={`
+        grid transition-all duration-500 w-full mx-auto
+        ${isFullScreen 
+          ? 'grid-cols-5 sm:grid-cols-10 gap-2 sm:gap-4 p-6 sm:p-10 bg-slate-950 flex-1 content-center' 
+          : 'grid-cols-5 sm:grid-cols-10 gap-3 sm:gap-4 p-5 bg-slate-900 border border-slate-800 shadow-2xl rounded-2xl'
+        }
+      `}
+    >
       {tickets.map((ticket) => {
         const isSwappingSource = ticket.id === swappingTicketId;
         const belongsToActiveUser = activeOwnerName && ticket.ownerName === activeOwnerName;
         
-        // Logical check for when to show the "X" (Any occupied state)
         const isOccupied = 
           ticket.status === TicketStatus.SELECTED || 
           ticket.status === TicketStatus.RESERVED || 
           ticket.status === TicketStatus.PAID;
 
-        // An interactive ticket is one that is available to be clicked
         let isInteractive = ticket.status === TicketStatus.AVAILABLE || ticket.status === TicketStatus.SELECTED;
         
         if (swappingTicketId) {
@@ -51,15 +58,13 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
               ${isSwappingSource ? 'bg-indigo-900 border-indigo-400 text-white ring-2 ring-indigo-500/50 z-10' : STATUS_COLORS[ticket.status]}
               ${belongsToActiveUser ? 'bg-emerald-950 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)]' : ''}
               ${!isInteractive && !isSwappingSource ? 'cursor-not-allowed opacity-100' : 'active:scale-90 cursor-pointer'}
-              aspect-square ${isFullScreen ? 'text-xl sm:text-4xl' : 'text-lg sm:text-2xl'} border-2
+              aspect-square ${isFullScreen ? 'text-xl sm:text-3xl' : 'text-lg sm:text-2xl'} border-2
             `}
           >
-            {/* The Number - Slightly faded when occupied to emphasize the X */}
             <span className={`relative z-10 text-white drop-shadow-lg ${isOccupied && !isSwappingSource ? 'opacity-40' : 'opacity-100'}`}>
               {ticket.id}
             </span>
             
-            {/* The "X" overlay - Scaled down to 75% for a cleaner look */}
             {isOccupied && !isSwappingSource && (
                <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none overflow-hidden">
                   <X 
@@ -69,7 +74,6 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
                </div>
             )}
             
-            {/* Swap indicator */}
             {isSwappingSource && (
               <RefreshCw className={`absolute top-1 right-1 animate-spin-slow opacity-80 ${isFullScreen ? 'w-4 h-4 sm:w-6 h-6' : 'w-3 h-3 sm:w-4 h-4'}`} />
             )}
@@ -78,6 +82,8 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
       })}
     </div>
   );
-};
+});
+
+TicketGrid.displayName = 'TicketGrid';
 
 export default TicketGrid;
