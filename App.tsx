@@ -22,7 +22,9 @@ import {
   FileText,
   Copy,
   X as CloseIcon,
-  User as UserIcon
+  User as UserIcon,
+  DollarSign,
+  AlertCircle
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -62,6 +64,20 @@ const App: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Financial Calculations
+  const financialStats = useMemo(() => {
+    const paidCount = tickets.filter(t => t.status === TicketStatus.PAID).length;
+    const reservedCount = tickets.filter(t => t.status === TicketStatus.RESERVED).length;
+    const totalSold = paidCount + reservedCount;
+    
+    return {
+      paid: paidCount * TICKET_PRICE,
+      pending: reservedCount * TICKET_PRICE,
+      total: totalSold * TICKET_PRICE,
+      count: totalSold
+    };
+  }, [tickets]);
 
   // Compute unique names for autocomplete
   const existingNames = useMemo(() => {
@@ -254,7 +270,7 @@ const App: React.FC = () => {
     textContent += "\n━━━━━━━━━━━━━━━━━━━━━━\n";
     textContent += `📊 *RESUMEN:*\n`;
     textContent += `✅ Vendidos: ${tickets.filter(t => t.status !== TicketStatus.AVAILABLE).length}/${TOTAL_NUMBERS}\n`;
-    textContent += `💵 Recaudado: $${(tickets.filter(t => t.status === TicketStatus.PAID).length * TICKET_PRICE).toLocaleString()}\n`;
+    textContent += `💵 Recaudado: $${financialStats.paid.toLocaleString()}\n`;
     textContent += "━━━━━━━━━━━━━━━━━━━━━━";
 
     setExportModal({ isOpen: true, content: textContent });
@@ -272,7 +288,6 @@ const App: React.FC = () => {
     setIsFullScreen(true);
   };
 
-  const totalRaised = tickets.filter(t => t.status === TicketStatus.PAID).length * TICKET_PRICE;
   const availableCount = tickets.filter(t => t.status === TicketStatus.AVAILABLE).length;
   const selectedCount = tickets.filter(t => t.status === TicketStatus.SELECTED).length;
 
@@ -343,6 +358,51 @@ const App: React.FC = () => {
             </div>
           </div>
         </header>
+      )}
+
+      {/* Financial Summary - Only visible outside full screen */}
+      {!isFullScreen && (
+        <section className="max-w-5xl mx-auto px-4 mt-8 animate-fade-in">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Recaudado Card */}
+            <div className="bg-slate-900 border border-emerald-500/20 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <CheckCircle size={60} className="text-emerald-500" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mb-1">Recaudado</p>
+              <h2 className="text-3xl font-black text-white italic tracking-tight">
+                ${financialStats.paid.toLocaleString()}
+              </h2>
+              <div className="mt-2 h-1 w-12 bg-emerald-500 rounded-full"></div>
+            </div>
+
+            {/* Pendiente Card */}
+            <div className="bg-slate-900 border border-amber-500/20 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <AlertCircle size={60} className="text-amber-500" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500 mb-1">Por Cobrar</p>
+              <h2 className="text-3xl font-black text-white italic tracking-tight">
+                ${financialStats.pending.toLocaleString()}
+              </h2>
+              <div className="mt-2 h-1 w-12 bg-amber-500 rounded-full"></div>
+            </div>
+
+            {/* Total Sales Card */}
+            <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <DollarSign size={60} className="text-slate-600" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Venta Total</p>
+              <h2 className="text-3xl font-black text-white italic tracking-tight">
+                ${financialStats.total.toLocaleString()}
+              </h2>
+              <p className="text-[10px] font-bold text-slate-600 uppercase mt-1">
+                {financialStats.count} de {TOTAL_NUMBERS} boletas
+              </p>
+            </div>
+          </div>
+        </section>
       )}
 
       {/* Export Modal */}
