@@ -374,7 +374,6 @@ const App: React.FC = () => {
         </section>
       )}
 
-      {/* Export Modal */}
       {exportModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl animate-fade-in">
           <div className="bg-slate-900 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.8)] border border-slate-800 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -444,7 +443,7 @@ const App: React.FC = () => {
 
         <div className={`animate-fade-in flex-1 ${isFullScreen ? 'flex items-center justify-center' : ''}`}>
           {activeTab === 'grid' ? (
-            <div className={isFullScreen ? 'w-full max-w-[98vh] px-2 flex items-center justify-center' : ''}>
+            <div className={isFullScreen ? 'w-full max-w-5xl px-4 flex items-center justify-center' : ''}>
               {swappingTicketId && !isFullScreen && (
                  <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 mb-8 flex justify-between items-center ring-1 ring-indigo-500/20">
                     <p className="text-sm font-semibold text-indigo-300 italic">Moviendo #{swappingTicketId}. Elije un nuevo destino disponible.</p>
@@ -491,7 +490,6 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Control for Full Screen */}
       {isFullScreen && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 z-50 flex justify-center items-center shadow-[0_-20px_40px_rgba(0,0,0,0.6)]">
            <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-5xl px-4">
@@ -528,7 +526,6 @@ const App: React.FC = () => {
                     )}
                  </div>
 
-                 {/* Suggestions Dropdown for Full Screen */}
                  {showFsSuggestions && !addingTicketsToUser && (
                     <div className="absolute bottom-full left-0 w-full mb-3 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[60]">
                        <div className="p-2">
