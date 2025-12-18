@@ -57,7 +57,10 @@ const UserSummaryList: React.FC<UserSummaryListProps> = ({
       if (ticket.status === TicketStatus.PAID) user.totalPaid += TICKET_PRICE;
       else if (ticket.status === TicketStatus.RESERVED) user.totalDebt += TICKET_PRICE;
     });
-    let result = Array.from(userMap.values()).sort((a, b) => b.totalDebt - a.totalDebt);
+    
+    // CAMBIO CRÍTICO: Ordenar por nombre (alfabético) para que no salten al pagar
+    let result = Array.from(userMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    
     if (searchTerm.trim()) {
       const lower = searchTerm.toLowerCase();
       result = result.filter(u => u.name.toLowerCase().includes(lower) || u.tickets.some(t => t.id.includes(lower)));
@@ -117,6 +120,7 @@ const UserSummaryList: React.FC<UserSummaryListProps> = ({
               
               <div className="flex items-center gap-1 ml-4">
                 <button 
+                  type="button"
                   onClick={(e) => { e.stopPropagation(); onAddMoreTickets(user.name); }}
                   className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-xl transition-all flex items-center gap-1"
                   title="Añadir más boletas"
@@ -125,6 +129,7 @@ const UserSummaryList: React.FC<UserSummaryListProps> = ({
                   <span className="text-[9px] font-black uppercase hidden sm:inline">Añadir</span>
                 </button>
                 <button 
+                  type="button"
                   onClick={(e) => { e.stopPropagation(); setRevokeAllConfirmation(user.name); }}
                   className="p-2 text-slate-600 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
                   title="Eliminar registro"
@@ -161,10 +166,14 @@ const UserSummaryList: React.FC<UserSummaryListProps> = ({
                           {ticket.id}
                         </div>
                         <button 
-                          onClick={() => onTogglePayment(ticket.id)}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onTogglePayment(ticket.id);
+                          }}
                           className={`
-                            text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md
-                            ${isPaid ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-500'}
+                            text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md transition-colors
+                            ${isPaid ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20'}
                           `}
                         >
                           {isPaid ? 'PAGO' : 'DEBE'}
@@ -172,8 +181,8 @@ const UserSummaryList: React.FC<UserSummaryListProps> = ({
                       </div>
                       
                       <div className="flex items-center gap-0.5">
-                        <button onClick={() => onEditTicket(ticket.id)} className="p-1.5 text-slate-600 hover:text-slate-100" title="Mover número"><Pencil size={14} /></button>
-                        <button onClick={() => setDeleteConfirmation({id: ticket.id, ownerName: user.name})} className="p-1.5 text-slate-600 hover:text-red-500" title="Liberar número"><Trash2 size={14} /></button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); onEditTicket(ticket.id); }} className="p-1.5 text-slate-600 hover:text-slate-100" title="Mover número"><Pencil size={14} /></button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); setDeleteConfirmation({id: ticket.id, ownerName: user.name}); }} className="p-1.5 text-slate-600 hover:text-red-500" title="Liberar número"><Trash2 size={14} /></button>
                       </div>
                     </div>
                   );
@@ -192,8 +201,8 @@ const UserSummaryList: React.FC<UserSummaryListProps> = ({
             <h3 className="text-xl font-black mb-2 uppercase italic">¿Liberar #{deleteConfirmation.id}?</h3>
             <p className="text-slate-500 text-xs mb-8">El número quedará disponible para la venta nuevamente.</p>
             <div className="flex gap-3">
-              <button onClick={() => setDeleteConfirmation(null)} className="flex-1 py-3 bg-slate-800 text-slate-400 rounded-xl font-bold uppercase text-xs">Atrás</button>
-              <button onClick={() => { onRevokeTicket(deleteConfirmation.id); setDeleteConfirmation(null); }} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold uppercase text-xs">Liberar</button>
+              <button type="button" onClick={() => setDeleteConfirmation(null)} className="flex-1 py-3 bg-slate-800 text-slate-400 rounded-xl font-bold uppercase text-xs">Atrás</button>
+              <button type="button" onClick={() => { onRevokeTicket(deleteConfirmation.id); setDeleteConfirmation(null); }} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold uppercase text-xs">Liberar</button>
             </div>
           </div>
         </div>
@@ -206,8 +215,8 @@ const UserSummaryList: React.FC<UserSummaryListProps> = ({
             <h3 className="text-xl font-black mb-2 uppercase italic">¿Eliminar Registro?</h3>
             <p className="text-slate-500 text-xs mb-8">Se liberarán todas las boletas de <b className="text-white">{revokeAllConfirmation}</b>.</p>
             <div className="flex gap-3">
-              <button onClick={() => setRevokeAllConfirmation(null)} className="flex-1 py-3 bg-slate-800 text-slate-400 rounded-xl font-bold uppercase text-xs">Cancelar</button>
-              <button onClick={() => { onRevokeAllFromUser(revokeAllConfirmation); setRevokeAllConfirmation(null); }} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold uppercase text-xs">Eliminar</button>
+              <button type="button" onClick={() => setRevokeAllConfirmation(null)} className="flex-1 py-3 bg-slate-800 text-slate-400 rounded-xl font-bold uppercase text-xs">Cancelar</button>
+              <button type="button" onClick={() => { onRevokeAllFromUser(revokeAllConfirmation); setRevokeAllConfirmation(null); }} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold uppercase text-xs">Eliminar</button>
             </div>
           </div>
         </div>
