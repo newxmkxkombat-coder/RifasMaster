@@ -15,10 +15,10 @@ interface TicketGridProps {
 const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappingTicketId, isFullScreen = false, activeOwnerName = null }) => {
   return (
     <div className={`
-      grid rounded-2xl transition-all duration-500 w-full
+      grid transition-all duration-500 w-full mx-auto
       ${isFullScreen 
-        ? 'grid-cols-10 gap-2 sm:gap-3 p-4 bg-slate-950 border border-slate-900 shadow-[0_0_50px_rgba(0,0,0,1)]'
-        : 'grid-cols-5 sm:grid-cols-10 gap-3 sm:gap-4 p-5 bg-slate-900 border border-slate-800 shadow-2xl'
+        ? 'grid-cols-10 gap-1.5 sm:gap-2 p-2 bg-slate-950 border border-slate-900 shadow-[0_0_50px_rgba(0,0,0,1)] max-w-[95vh]'
+        : 'grid-cols-5 sm:grid-cols-10 gap-3 sm:gap-4 p-5 bg-slate-900 border border-slate-800 shadow-2xl rounded-2xl'
       }
     `}>
       {tickets.map((ticket) => {
@@ -31,9 +31,6 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
           ticket.status === TicketStatus.RESERVED || 
           ticket.status === TicketStatus.PAID;
 
-        // An interactive ticket is one that is available to be clicked
-        // OR the one we are currently swapping FROM
-        // OR one that belongs to the user we are currently "Adding more" to (so we can remove it if needed)
         let isInteractive = ticket.status === TicketStatus.AVAILABLE || ticket.status === TicketStatus.SELECTED;
         
         if (swappingTicketId) {
@@ -49,24 +46,25 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
             onClick={() => isInteractive ? onToggleTicket(ticket.id) : null}
             disabled={!isInteractive && !isSwappingSource}
             className={`
-              relative flex flex-col items-center justify-center rounded-xl font-black transition-all duration-300
+              relative flex flex-col items-center justify-center font-black transition-all duration-300
+              ${isFullScreen ? 'rounded-none' : 'rounded-xl'}
               ${isSwappingSource ? 'bg-indigo-900 border-indigo-400 text-white ring-2 ring-indigo-500/50 z-10' : STATUS_COLORS[ticket.status]}
               ${belongsToActiveUser ? 'bg-emerald-950 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)]' : ''}
               ${!isInteractive && !isSwappingSource ? 'cursor-not-allowed opacity-100' : 'active:scale-90 cursor-pointer'}
               aspect-square ${isFullScreen ? 'text-xl sm:text-4xl' : 'text-lg sm:text-2xl'} border-2
             `}
           >
-            {/* The Number - Pure white for all states for maximum legibility */}
-            <span className="relative z-10 text-white drop-shadow-lg">
+            {/* The Number */}
+            <span className={`relative z-10 text-white drop-shadow-lg ${isOccupied && !isSwappingSource ? 'opacity-40' : 'opacity-100'}`}>
               {ticket.id}
             </span>
             
-            {/* The "X" overlay - Now larger and with thicker stroke to 'cover' the number */}
+            {/* The "X" overlay - Much larger and centered */}
             {isOccupied && !isSwappingSource && (
                <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none overflow-hidden">
                   <X 
-                    className={`w-full h-full opacity-90 scale-110 ${belongsToActiveUser ? 'text-emerald-400' : 'text-red-500'}`} 
-                    strokeWidth={isFullScreen ? 5 : 4}
+                    className={`w-full h-full opacity-100 scale-125 ${belongsToActiveUser ? 'text-emerald-400' : 'text-red-600'}`} 
+                    strokeWidth={isFullScreen ? 6 : 5}
                   />
                </div>
             )}
