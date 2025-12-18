@@ -8,9 +8,10 @@ interface TicketGridProps {
   onToggleTicket: (id: string) => void;
   swappingTicketId?: string | null;
   isFullScreen?: boolean;
+  activeOwnerName?: string | null;
 }
 
-const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappingTicketId, isFullScreen = false }) => {
+const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappingTicketId, isFullScreen = false, activeOwnerName = null }) => {
   return (
     <div className={`
       grid rounded-2xl transition-all duration-500 w-full
@@ -21,6 +22,7 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
     `}>
       {tickets.map((ticket) => {
         const isSwappingSource = ticket.id === swappingTicketId;
+        const belongsToActiveUser = activeOwnerName && ticket.ownerName === activeOwnerName;
         
         // Logical check for when to show the "X" (Any occupied state)
         const isOccupied = 
@@ -30,10 +32,13 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
 
         // An interactive ticket is one that is available to be clicked
         // OR the one we are currently swapping FROM
+        // OR one that belongs to the user we are currently "Adding more" to (so we can remove it if needed)
         let isInteractive = ticket.status === TicketStatus.AVAILABLE || ticket.status === TicketStatus.SELECTED;
         
         if (swappingTicketId) {
             isInteractive = ticket.status === TicketStatus.AVAILABLE; 
+        } else if (activeOwnerName) {
+            isInteractive = ticket.status === TicketStatus.AVAILABLE || belongsToActiveUser;
         }
 
         return (
@@ -45,6 +50,7 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
             className={`
               relative flex flex-col items-center justify-center rounded-xl font-black transition-all duration-300
               ${isSwappingSource ? 'bg-indigo-900 border-indigo-400 text-white ring-2 ring-indigo-500/50 z-10' : STATUS_COLORS[ticket.status]}
+              ${belongsToActiveUser ? 'bg-emerald-950 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)]' : ''}
               ${!isInteractive && !isSwappingSource ? 'cursor-not-allowed opacity-100' : 'active:scale-90 cursor-pointer'}
               aspect-square ${isFullScreen ? 'text-xl sm:text-4xl' : 'text-lg sm:text-2xl'} border-2
             `}
@@ -54,12 +60,12 @@ const TicketGrid: React.FC<TicketGridProps> = ({ tickets, onToggleTicket, swappi
               {ticket.id}
             </span>
             
-            {/* The "X" overlay - Red and prominent for any occupied ticket */}
+            {/* The "X" overlay - Emerald for current user's tickets, Red for others */}
             {isOccupied && !isSwappingSource && (
                <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
                   <X 
-                    className="w-full h-full text-red-900 opacity-60 p-0.5 sm:p-1" 
-                    strokeWidth={isFullScreen ? 6 : 5}
+                    className={`w-full h-full opacity-90 p-1 sm:p-2 ${belongsToActiveUser ? 'text-emerald-400' : 'text-red-500'}`} 
+                    strokeWidth={isFullScreen ? 4 : 3}
                   />
                </div>
             )}
