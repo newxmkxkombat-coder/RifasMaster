@@ -5,7 +5,6 @@ import UserSummaryList from './components/UserSummaryList';
 import SalesControl from './components/SalesControl';
 import { Ticket, TicketStatus } from './types';
 import { TOTAL_NUMBERS, TICKET_PRICE } from './constants';
-import * as htmlToImage from 'html-to-image';
 import { 
   LayoutGrid, 
   Users, 
@@ -25,8 +24,7 @@ import {
   X as CloseIcon,
   User as UserIcon,
   DollarSign,
-  AlertCircle,
-  Camera
+  AlertCircle
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -52,9 +50,7 @@ const App: React.FC = () => {
   const [showDbMenu, setShowDbMenu] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [fullScreenName, setFullScreenName] = useState('');
-  const [isCapturing, setIsCapturing] = useState(false);
   
-  const gridRef = useRef<HTMLDivElement>(null);
   const fsInputContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -223,28 +219,6 @@ const App: React.FC = () => {
     downloadAnchor.click();
     downloadAnchor.remove();
     setShowDbMenu(false);
-  };
-
-  const handleCaptureScreen = async () => {
-    if (!gridRef.current) return;
-    setIsCapturing(true);
-    try {
-      // Small delay to ensure any hover effects are cleared
-      await new Promise(r => setTimeout(r, 100));
-      const dataUrl = await htmlToImage.toPng(gridRef.current, {
-        backgroundColor: '#020617', // Match slate-950
-        cacheBust: true,
-      });
-      const link = document.createElement('a');
-      link.download = `tablero_rifa_${new Date().getTime()}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch (err) {
-      console.error('Error al capturar pantalla:', err);
-      alert('No se pudo tomar la captura. Inténtalo de nuevo.');
-    } finally {
-      setIsCapturing(false);
-    }
   };
 
   const handlePrepareExportText = () => {
@@ -454,7 +428,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <main className={`${isFullScreen ? 'h-full flex flex-col' : 'max-w-5xl mx-auto px-4 py-8'}`}>
+      <main className={`${isFullScreen ? 'h-full flex flex-col pt-8 pb-28' : 'max-w-5xl mx-auto px-4 py-8'}`}>
         {!isFullScreen && (
           <div className="flex space-x-8 border-b border-slate-800 mb-8">
             <button onClick={() => { setActiveTab('grid'); handleClearSelection(); }} className={`pb-4 px-2 text-sm font-black uppercase tracking-widest relative transition-all ${activeTab === 'grid' ? 'text-emerald-400' : 'text-slate-500'}`}>
@@ -468,9 +442,9 @@ const App: React.FC = () => {
           </div>
         )}
 
-        <div className={`animate-fade-in flex-1 ${isFullScreen ? 'flex flex-col' : ''}`}>
+        <div className={`animate-fade-in flex-1 ${isFullScreen ? 'flex items-center justify-center' : ''}`}>
           {activeTab === 'grid' ? (
-            <div className={isFullScreen ? 'flex-1 flex flex-col justify-center items-center h-full' : ''}>
+            <div className={isFullScreen ? 'w-full max-w-[98vh] px-2 flex items-center justify-center' : ''}>
               {swappingTicketId && !isFullScreen && (
                  <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 mb-8 flex justify-between items-center ring-1 ring-indigo-500/20">
                     <p className="text-sm font-semibold text-indigo-300 italic">Moviendo #{swappingTicketId}. Elije un nuevo destino disponible.</p>
@@ -497,7 +471,6 @@ const App: React.FC = () => {
                  </div>
               )}
               <TicketGrid 
-                ref={gridRef}
                 tickets={tickets} 
                 onToggleTicket={handleToggleTicket} 
                 swappingTicketId={swappingTicketId} 
@@ -522,20 +495,6 @@ const App: React.FC = () => {
       {isFullScreen && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 z-50 flex justify-center items-center shadow-[0_-20px_40px_rgba(0,0,0,0.6)]">
            <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-5xl px-4">
-              
-              {/* Botón Tomar Captura */}
-              <button 
-                onClick={handleCaptureScreen}
-                disabled={isCapturing}
-                className={`
-                  bg-slate-800 hover:bg-slate-700 text-emerald-400 px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-3 active:scale-95 transition-all shadow-lg border border-slate-700 sm:mr-auto
-                  ${isCapturing ? 'opacity-50 cursor-wait' : ''}
-                `}
-              >
-                {isCapturing ? <RefreshCw className="animate-spin" size={16} /> : <Camera size={16} />}
-                {isCapturing ? 'PROCESANDO...' : 'TOMAR CAPTURA'}
-              </button>
-
               <div className="flex-1 w-full sm:w-auto relative" ref={fsInputContainerRef}>
                  <div className="flex items-center gap-3">
                     <input 
@@ -569,6 +528,7 @@ const App: React.FC = () => {
                     )}
                  </div>
 
+                 {/* Suggestions Dropdown for Full Screen */}
                  {showFsSuggestions && !addingTicketsToUser && (
                     <div className="absolute bottom-full left-0 w-full mb-3 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[60]">
                        <div className="p-2">
@@ -590,7 +550,7 @@ const App: React.FC = () => {
 
               <button 
                 onClick={() => { setIsFullScreen(false); setAddingTicketsToUser(null); }}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-400 px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-3 active:scale-95 transition-all shadow-lg border border-slate-700 sm:ml-4"
+                className="bg-slate-800 hover:bg-slate-700 text-slate-400 px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-3 active:scale-95 transition-all shadow-lg border border-slate-700 sm:ml-auto"
               >
                 <Minimize2 size={16} />
                 SALIR
