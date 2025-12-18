@@ -8,13 +8,15 @@ interface SalesControlProps {
   onConfirmSale: (name: string, isPaid: boolean) => void;
   onClearSelection: () => void;
   initialBuyerName?: string;
+  hideInEditMode?: boolean;
 }
 
 const SalesControl: React.FC<SalesControlProps> = ({ 
   selectedTickets, 
   onConfirmSale, 
   onClearSelection,
-  initialBuyerName = ''
+  initialBuyerName = '',
+  hideInEditMode = false
 }) => {
   const [buyerName, setBuyerName] = useState(initialBuyerName);
   
@@ -23,7 +25,7 @@ const SalesControl: React.FC<SalesControlProps> = ({
     setBuyerName(initialBuyerName);
   }, [initialBuyerName]);
 
-  if (selectedTickets.length === 0) return null;
+  if (selectedTickets.length === 0 || hideInEditMode) return null;
 
   const total = selectedTickets.length * TICKET_PRICE;
 
